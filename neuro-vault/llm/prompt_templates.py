@@ -92,7 +92,7 @@ def build_context(chunks: List[dict]) -> str:
     return "\n---\n".join(blocks)
 
 
-def build_prompts(
+def build_prompt(
     query: str,
     chunks: List[dict],
     is_tamil: bool = False,
