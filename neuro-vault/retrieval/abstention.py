@@ -24,12 +24,24 @@ from config import Config
 
 logger = logging.getLogger(__name__)
 
-# Simple biomedical entity pattern — catches common clinical abbreviations
-# and multi-word disease/drug names
+# Improved medical entity pattern:
+# 1. Acronyms (HIV, TB, DM, etc.)
+# 2. Capitalized phrases with numbers (Type 2 Diabetes)
+# 3. Suffix-based clinical terms (itis, osis, etc.)
+# 4. Common single-word clinical terms
 _MEDICAL_ENTITY = re.compile(
-    r"\b(?:[A-Z]{2,6}|[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+|"
-    r"[a-z]+(?:itis|osis|emia|pathy|ectomy|plasty|scopy|gram))\b"
+    r"\b(?:[A-Z]{2,6}|[A-Z][a-z0-9]+(?:\s+[A-Z0-9][a-z0-9]*)+|"
+    r"[a-z]+(?:itis|osis|emia|pathy|ectomy|plasty|scopy|gram)|"
+    r"diabetes|tuberculosis|dengue|malaria|cancer|infection|guideline|treatment)\b",
+    re.IGNORECASE
 )
+
+# Common non-medical words that often start with capitals in queries
+_NON_MEDICAL_FILTER = {
+    "what", "how", "where", "when", "which", "who", "whom", "whose",
+    "please", "tell", "give", "list", "show", "describe", "define",
+    "the", "this", "that", "these", "those", "your", "my", "our"
+}
 
 
 class AbstentionChecker:
@@ -249,10 +261,29 @@ class AbstentionChecker:
         Returns:
             Coverage ratio in [0, 1].  Returns 1.0 if no entities found.
         """
-        entities = set(m.lower() for m in _MEDICAL_ENTITY.findall(query))
+        raw_entities = _MEDICAL_ENTITY.findall(query)
+        entities = set()
+        for ent in raw_entities:
+            ent_low = ent.lower()
+            if ent_low not in _NON_MEDICAL_FILTER:
+                entities.add(ent_low)
+
         if not entities:
             return 1.0  # No recognisable entities → don't penalise
 
         combined_text = " ".join(c.get("text", "").lower() for c in chunks)
-        covered = sum(1 for ent in entities if ent in combined_text)
-        return covered / len(entities)
+        
+        covered_count = 0
+        for ent in entities:
+            # Flexible match: either the full phrase or the majority of its words
+            if ent in combined_text:
+                covered_count += 1
+            else:
+                # For multi-word entities, check if individual important words are there
+                words = [w for w in ent.split() if len(w) > 3]
+                if words:
+                    word_matches = sum(1 for w in words if w in combined_text)
+                    if word_matches / len(words) >= 0.5:
+                        covered_count += 1
+
+        return covered_count / len(entities)
