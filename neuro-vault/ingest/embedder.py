@@ -74,17 +74,28 @@ class Embedder:
 
         cache_path = self.model_dir
         if cache_path and cache_path.exists():
-            logger.info("Loading embedding model from local cache: %s", cache_path)
-            self._model = SentenceTransformer(str(cache_path))
-        else:
-            logger.info(
-                "Downloading embedding model '%s' (one-time setup)…", self.model_name
-            )
-            self._model = SentenceTransformer(self.model_name)
-            if cache_path:
-                cache_path.mkdir(parents=True, exist_ok=True)
-                self._model.save(str(cache_path))
-                logger.info("Model saved to '%s' for offline use", cache_path)
+            try:
+                logger.info("Loading embedding model from local cache: %s", cache_path)
+                self._model = SentenceTransformer(str(cache_path))
+                return
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "Local embedding cache at '%s' is unusable (%s); "
+                    "falling back to model name '%s'.",
+                    cache_path,
+                    exc,
+                    self.model_name,
+                )
+
+        logger.info(
+            "Downloading/loading embedding model '%s' (one-time setup)…",
+            self.model_name,
+        )
+        self._model = SentenceTransformer(self.model_name)
+        if cache_path:
+            cache_path.mkdir(parents=True, exist_ok=True)
+            self._model.save(str(cache_path))
+            logger.info("Model saved to '%s' for offline use", cache_path)
 
     # ------------------------------------------------------------------ #
     #  Embedding

@@ -1,0 +1,44 @@
+{
+  "max_samples": 60,
+  "condition": {
+    "baseline": "MTSamples-only raw corpus",
+    "improved": "Enriched corpus (MTSamples + MedQuAD + PubMed)",
+    "model_control": "Same embedder, retriever, reranker, abstention thresholds"
+  },
+  "baseline": {
+    "total": 60,
+    "answered": 16,
+    "abstained": 44,
+    "abstention_rate": 0.7333333333333333,
+    "answer_rate": 0.26666666666666666,
+    "context_token_recall": 0.2878649826256443,
+    "hit_rate_recall_ge_0_2": 0.875,
+    "top1_rerank_score_mean": 0.01639344262295082,
+    "dataset_coverage": {
+      "pubmed": 0.0,
+      "medquad": 0.0,
+      "mtsamples": 1.0
+    }
+  },
+  "improved": {
+    "total": 60,
+    "answered": 52,
+    "abstained": 8,
+    "abstention_rate": 0.13333333333333333,
+    "answer_rate": 0.8666666666666667,
+    "context_token_recall": 0.30830474420430853,
+    "hit_rate_recall_ge_0_2": 0.6923076923076923,
+    "top1_rerank_score_mean": 0.09594103419250605,
+    "dataset_coverage": {
+      "pubmed": 0.019230769230769232,
+      "medquad": 1.0,
+      "mtsamples": 0.0
+    }
+  },
+  "improvement_pct": {
+    "answer_rate": 225.00000000000006,
+    "abstention_rate": 81.81818181818183,
+    "context_token_recall": 7.10046820986394,
+    "top1_rerank_score_mean": 485.24030857428687
+  }
+}

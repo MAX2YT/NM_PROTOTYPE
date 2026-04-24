@@ -115,3 +115,13 @@ def build_prompts(
 
     user_turn = f"Please answer the following clinical question based ONLY on the provided context.\n\nQuestion: {query}"
     return system, user_turn
+
+
+def build_prompt(query: str, chunks: List[dict], is_tamil: bool = False) -> str:
+    """Backward-compatible single-string prompt builder for legacy callers.
+
+    The evaluation pipeline expects a single prompt string; concatenate the
+    system and user turns in a deterministic format.
+    """
+    system, user_turn = build_prompts(query, chunks, is_tamil=is_tamil)
+    return f"{system}\n\n{user_turn}"
